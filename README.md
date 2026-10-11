@@ -1,5 +1,9 @@
 # ffmpeg-minimal-build
 
+[![GitHub stars](https://img.shields.io/github/stars/Abdullah-Masood-05/ffmpeg-minimal-build?style=social&logo=github)](https://github.com/Abdullah-Masood-05/ffmpeg-minimal-build/stargazers)
+
+> ⭐ **Enjoying ffmpeg-minimal-build?** If it's useful to you, please [star it on GitHub](https://github.com/Abdullah-Masood-05/ffmpeg-minimal-build). It's free and it helps other developers find it.
+
 A minimal static build of FFmpeg 7.1.1 for Windows x64, compiled from the
 `n7.1.1` source tree. Single 1.6 MB `ffmpeg.exe`, statically linked, no DLLs.
 
