@@ -50,8 +50,36 @@ only code this repository holds.
 
 ## Downloads
 
-Grab `ffmpeg-7.1.1-win64-custom.exe` from the [releases](../../releases)
-page. The checksum is listed in each release.
+### With pixi (recommended)
+
+The binaries are published as the `ffmpeg-minimal` conda package on the
+[`abdullahmasood05/vigilo`](https://prefix.dev/channels/@abdullahmasood05/vigilo)
+prefix.dev channel, for `win-64`, `linux-64` and `osx-arm64`:
+
+```bash
+pixi workspace channel add --prepend https://prefix.dev/abdullahmasood05/vigilo
+pixi add ffmpeg-minimal
+pixi run ffmpeg -version
+```
+
+or, as a global tool:
+
+```bash
+pixi global install -c https://prefix.dev/abdullahmasood05/vigilo -c conda-forge ffmpeg-minimal
+```
+
+The package is a straight repackaging of the release binaries below, pinned by
+sha256 in [`conda/recipe.yaml`](conda/recipe.yaml) and uploaded by the
+[`Publish conda package`](.github/workflows/publish-conda.yml) workflow.
+It installs an executable named `ffmpeg`, so don't put it in the same
+environment as conda-forge's full `ffmpeg`.
+
+### Direct download
+
+Grab the binary for your platform from the [releases](../../releases) page
+(`ffmpeg-windows-x86_64.exe`, `ffmpeg-linux-x86_64`, `ffmpeg-macos-arm64`, plus
+`.deb` / `.rpm` / `.pkg.tar.zst` packages for Linux). The checksum is listed in
+each release.
 
 ## License
 

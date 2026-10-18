@@ -1,0 +1,70 @@
+# Repackages the static binaries from a GitHub release of this repository as a
+# conda package, so pixi/conda users get the right ffmpeg for their platform
+# from the prefix.dev channel instead of downloading it by hand.
+#
+# To publish a new release: bump `release` (and `version` / build `number` if
+# the FFmpeg source changed), paste the three sha256 values from the release
+# assets, and run the "Publish conda package" workflow.
+context:
+  version: "7.1.1"
+  release: v7.1.4-multiplatform
+  base_url: https://github.com/Abdullah-Masood-05/ffmpeg-minimal-build/releases/download
+
+package:
+  name: ffmpeg-minimal
+  version: ${{ version }}
+
+source:
+  - path: ../LICENSE
+  - if: win and x86_64
+    then:
+      url: ${{ base_url }}/${{ release }}/ffmpeg-windows-x86_64.exe
+      sha256: ed8aa96efcd839117d11bc5b801d24d1a60fc336dd654d393e38357be5152fd2
+      file_name: ffmpeg.exe
+  - if: linux and x86_64
+    then:
+      url: ${{ base_url }}/${{ release }}/ffmpeg-linux-x86_64
+      sha256: e9a1972905261d99206dc6e1e02db57e58db461b338cde3d7d654ca3d12f8a59
+      file_name: ffmpeg
+  - if: osx and arm64
+    then:
+      url: ${{ base_url }}/${{ release }}/ffmpeg-macos-arm64
+      sha256: fff2acdba525fb1b876a0e27b972dbdd6afad505f2d132ea72e8a92a9a0045c5
+      file_name: ffmpeg
+
+build:
+  # Tracks the release revision (v7.1.4 -> 4) on top of the FFmpeg version.
+  number: 4
+  skip:
+    - not ((win and x86_64) or (linux and x86_64) or (osx and arm64))
+  # Prebuilt static executables: nothing to relocate or rewrite.
+  prefix_detection:
+    ignore_binary_files: true
+  dynamic_linking:
+    binary_relocation: false
+  script:
+    - if: win
+      then:
+        - if not exist "%LIBRARY_BIN%" mkdir "%LIBRARY_BIN%"
+        - copy ffmpeg.exe "%LIBRARY_BIN%\ffmpeg.exe"
+      else:
+        - install -Dm755 ffmpeg "$PREFIX/bin/ffmpeg"
+
+tests:
+  - script:
+      - ffmpeg -hide_banner -version
+  - package_contents:
+      bin:
+        - ffmpeg
+
+about:
+  homepage: https://github.com/Abdullah-Masood-05/ffmpeg-minimal-build
+  repository: https://github.com/Abdullah-Masood-05/ffmpeg-minimal-build
+  license: LGPL-2.1-or-later
+  license_file: LICENSE
+  summary: Minimal static FFmpeg for webcam capture (DirectShow/V4L2/AVFoundation to raw frames), built for Vigilo.
+  description: |
+    A camera-capture-only FFmpeg build: --disable-all plus the capture input
+    device, MJPEG/rawvideo decoding, rawvideo output, the scale filter and the
+    pipe protocol. Statically linked, no network, no ffprobe/ffplay, LGPL only.
+    The exact configure lines live in the repository's build workflow.

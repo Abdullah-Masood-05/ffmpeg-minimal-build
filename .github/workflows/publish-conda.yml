@@ -1,0 +1,79 @@
+name: Publish conda package
+
+# Repackages the binaries of an existing GitHub release (pinned with sha256 in
+# conda/recipe.yaml) and uploads them to the prefix.dev channel, so the build
+# is installable with `pixi add ffmpeg-minimal`.
+#
+# Uploads use prefix.dev trusted publishing: the channel authorises this
+# repository + workflow filename, and the job proves who it is with a GitHub
+# OIDC token. No API key is stored anywhere.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: Upload to prefix.dev (untick for a dry-run build)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+env:
+  CHANNEL: abdullahmasood05/vigilo
+  RATTLER_BUILD_VERSION: v0.77.0
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, platform: win-64 }
+          - { os: ubuntu-latest, platform: linux-64 }
+          - { os: macos-14, platform: osx-arm64 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build package
+        uses: prefix-dev/rattler-build-action@v0.2.39
+        with:
+          rattler-build-version: ${{ env.RATTLER_BUILD_VERSION }}
+          recipe-path: conda/recipe.yaml
+          artifact-name: conda-${{ matrix.platform }}
+
+  upload:
+    name: Upload to prefix.dev
+    needs: build
+    if: github.event_name == 'release' || inputs.upload
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: conda-*
+          merge-multiple: true
+          path: output
+
+      - name: Install rattler-build
+        uses: prefix-dev/rattler-build-action@v0.2.39
+        with:
+          rattler-build-version: ${{ env.RATTLER_BUILD_VERSION }}
+          setup-only: true
+
+      - name: Upload
+        shell: bash
+        run: |
+          shopt -s globstar nullglob
+          pkgs=(output/**/*.conda)
+          if [ ${#pkgs[@]} -eq 0 ]; then echo "no packages found"; exit 1; fi
+          for pkg in "${pkgs[@]}"; do
+            echo "Uploading $pkg"
+            rattler-build upload prefix -c "$CHANNEL" "$pkg"
+          done
