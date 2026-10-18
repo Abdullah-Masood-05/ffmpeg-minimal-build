@@ -48,7 +48,8 @@ build:
         - if not exist "%LIBRARY_BIN%" mkdir "%LIBRARY_BIN%"
         - copy ffmpeg.exe "%LIBRARY_BIN%\ffmpeg.exe"
       else:
-        - install -Dm755 ffmpeg "$PREFIX/bin/ffmpeg"
+        - mkdir -p "$PREFIX/bin"
+        - install -m 755 ffmpeg "$PREFIX/bin/ffmpeg"
 
 tests:
   - script:
